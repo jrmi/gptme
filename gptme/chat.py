@@ -8,6 +8,8 @@ import urllib.parse
 from collections.abc import Generator
 from pathlib import Path
 
+from gptme.exceptions import RateLimitError
+
 from .commands import action_descriptions, execute_cmd
 from .constants import PROMPT_USER
 from .init import init
@@ -115,7 +117,7 @@ def chat(
                 while True:
                     try:
                         set_interruptible()
-                        response_msgs = list(step(manager.log, stream, confirm_func))
+                        response_msgs = list(step(manager, stream, confirm_func))
                     except KeyboardInterrupt:
                         console.log("Interrupted. Stopping current execution.")
                         manager.append(Message("system", "Interrupted"))
@@ -160,7 +162,7 @@ def chat(
 
         # ask for input if no prompt, generate reply, and run tools
         clear_interruptible()  # Ensure we're not interruptible during user input
-        for msg in step(manager.log, stream, confirm_func):  # pragma: no cover
+        for msg in step(manager, stream, confirm_func):  # pragma: no cover
             manager.append(msg)
             # run any user-commands, if msg is from user
             if msg.role == "user" and execute_cmd(msg, manager, confirm_func):
@@ -168,11 +170,14 @@ def chat(
 
 
 def step(
-    log: Log | list[Message],
+    # log: Log | list[Message],
+    log_manager: LogManager,
     stream: bool,
     confirm: ConfirmFunc,
 ) -> Generator[Message, None, None]:
     """Runs a single pass of the chat."""
+
+    log = log_manager.log
     if isinstance(log, list):
         log = Log(log)
 
@@ -204,7 +209,9 @@ def step(
             logger.debug(f"Prepared message: {m}")
 
         # generate response
+        print("before yea")
         msg_response = reply(msgs, get_model().model, stream)
+        print("after yeah")
 
         # log response and run tools
         if msg_response:
@@ -213,6 +220,15 @@ def step(
     except KeyboardInterrupt:
         clear_interruptible()
         yield Message("system", "Interrupted")
+    except RateLimitError:
+        console.log("Rate limit exceeded.")
+        if confirm(
+            "You've exceeded the token limit for this chat. "
+            "Do you want to summarize the conversation?"
+        ):
+            log_manager.summarize()
+        else:
+            raise
     finally:
         clear_interruptible()
 

@@ -2,6 +2,7 @@ from collections.abc import Generator
 from typing import TYPE_CHECKING, Literal, TypedDict
 
 from typing_extensions import Required
+from gptme.exceptions import RateLimitError
 
 from .constants import TEMPERATURE, TOP_P
 from .message import Message, len_tokens, msgs2dicts
@@ -54,18 +55,23 @@ def chat(messages: list[Message], model: str) -> str:
 
 
 def stream(messages: list[Message], model: str) -> Generator[str, None, None]:
+    from anthropic import RateLimitError as AnthropicRateLimitError  # fmt: skip
+
     assert anthropic, "LLM not initialized"
     messages, system_messages = _transform_system_messages(messages)
     messages_dicts = msgs2dicts(messages, provider="anthropic")
-    with anthropic.beta.prompt_caching.messages.stream(
-        model=model,
-        messages=messages_dicts,  # type: ignore
-        system=system_messages,  # type: ignore
-        temperature=TEMPERATURE,
-        top_p=TOP_P,
-        max_tokens=4096,
-    ) as stream:
-        yield from stream.text_stream
+    try:
+        with anthropic.beta.prompt_caching.messages.stream(
+            model=model,
+            messages=messages_dicts,  # type: ignore
+            system=system_messages,  # type: ignore
+            temperature=TEMPERATURE,
+            top_p=TOP_P,
+            max_tokens=4096,
+        ) as stream:
+            yield from stream.text_stream
+    except AnthropicRateLimitError as exc:
+        raise RateLimitError() from exc
 
 
 def _transform_system_messages(

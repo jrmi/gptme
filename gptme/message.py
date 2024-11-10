@@ -51,6 +51,7 @@ class Message:
     pinned: bool = False
     hide: bool = False
     quiet: bool = False
+    truncated: bool = False
     timestamp: datetime = field(default_factory=datetime.now)
     files: list[Path] = field(default_factory=list)
 

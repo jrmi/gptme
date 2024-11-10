@@ -24,7 +24,7 @@ Install
    # activate the virtualenv
    poetry shell
 
-   # build the project
+   # buil the project
    make build
 
 You can now start ``gptme`` from your development environment using the regular commands.

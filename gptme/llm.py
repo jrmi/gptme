@@ -227,6 +227,7 @@ def _summarize_helper(s: str, tok_max_start=400, tok_max_end=400) -> str:
     Helper function for summarizing long outputs.
     Truncates long outputs, then summarizes.
     """
+    print(len_tokens(s))
     if len_tokens(s) > tok_max_start + tok_max_end:
         beginning = " ".join(s.split()[:tok_max_start])
         end = " ".join(s.split()[-tok_max_end:])

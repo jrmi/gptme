@@ -81,6 +81,8 @@ def handle_cmd(
     name, *args = re.split(r"[\n\s]", cmd)
     full_args = cmd.split(" ", 1)[1] if " " in cmd else ""
     match name:
+        case "debug":
+            manager.debug()
         case "log":
             manager.undo(1, quiet=True)
             manager.log.print(show_hidden="--hidden" in args)

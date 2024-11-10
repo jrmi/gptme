@@ -64,6 +64,7 @@ class GPTMe(Agent):
         # don't exit on sys.exit()
         except (SystemExit, KeyboardInterrupt):
             pass
+
         print("--- Finished generation ---\n")
 
         return store.download()

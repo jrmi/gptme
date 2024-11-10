@@ -24,8 +24,11 @@ def reduce_log(
     if limit is None:
         limit = 0.9 * get_model().context
 
+    print("limit: ", get_model(), get_model().context, limit)
+
     # if we are below the limit, return the log as-is
     tokens = len_tokens(log)
+    print("Send ->", tokens)
     if tokens <= limit:
         yield from log
         return

@@ -8,9 +8,11 @@ from datetime import datetime
 from itertools import islice, zip_longest
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Literal, TypeAlias
+from typing import Any, Literal, TypeAlias, List
 
 from rich import print
+
+from gptme.llm import summarize
 
 from .dirs import get_logs_dir
 from .message import Message, len_tokens, print_msg
@@ -290,6 +292,29 @@ class LogManager:
         self.logdir = logsdir / name
         self.write()
 
+    def summarize(self) -> None:
+        """
+        Summarize the current log to make it smaller when we exceed the rate limit for
+        instance.
+        """
+
+        # self.log = Log([summarize(self.log.messages)])
+
+        messages: List[Message] = []
+        for message in self.log.messages:
+            if message.role == "system" and len_tokens(message.content) > 100:
+                message.replace(content=message.content[:200])
+            else:
+                messages.append(message)
+
+            self.log = Log(messages)
+
+    def debug(self) -> None:
+        for message in self.log.messages:
+            if message.role == "system" and len_tokens(message.content) > 100:
+                print(message, len_tokens(message.content))
+                print(message.content[:100])
+
     def to_dict(self, branches=False) -> dict:
         """Returns a dict representation of the log."""
         d: dict[str, Any] = {
@@ -306,6 +331,7 @@ class LogManager:
 
 def prepare_messages(msgs: list[Message]) -> list[Message]:
     """Prepares the messages before sending to the LLM."""
+    print("message prep", len_tokens(msgs))
     msgs_reduced = list(reduce_log(msgs))
 
     if len_tokens(msgs) != len_tokens(msgs_reduced):
