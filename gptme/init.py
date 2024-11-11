@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 from .config import config_path, load_config, set_config_value
 from .llm import init_llm
-from .models import (
+from .providers.models import (
     PROVIDERS,
     Provider,
     get_recommended_model,
