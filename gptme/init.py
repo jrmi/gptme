@@ -4,8 +4,8 @@ from typing import cast
 from dotenv import load_dotenv
 
 from .config import config_path, load_config, set_config_value
-from .providers.llm import init_llm, guess_model_from_config, get_model_from_api_key
-from .providers.models import (
+from .llm import init_llm, guess_model_from_config, get_model_from_api_key
+from .llm.models import (
     PROVIDERS,
     Provider,
     get_recommended_model,

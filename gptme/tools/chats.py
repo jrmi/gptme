@@ -43,7 +43,7 @@ def _summarize_conversation(
 ) -> list[str]:
     """Summarize a conversation."""
     # noreorder
-    from ..providers.llm import summarize as llm_summarize  # fmt: skip
+    from ..llm import summarize as llm_summarize  # fmt: skip
 
     summary_lines = []
     if include_summary:
